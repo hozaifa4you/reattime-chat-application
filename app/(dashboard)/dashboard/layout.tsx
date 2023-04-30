@@ -2,13 +2,17 @@ import { ReactNode } from "react";
 import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 import { authOptions } from "@/app/lib/auth";
-import Link from "next/link";
 import { Icon, Icons } from "@/app/components/Icons";
-import { FriendRequestSidebarOption, SignOutButton } from "@/app/components";
+import {
+   FriendRequestSidebarOption,
+   SidebarChatList,
+   SignOutButton,
+} from "@/app/components";
 import { fetchRedis } from "@/app/helper/redis";
-import { log } from "console";
+import { getFriendsById } from "@/app/helper/friends-by-id";
 
 interface LayoutProps {
    children: ReactNode;
@@ -27,8 +31,9 @@ const sidebarOptions: SidebarOptions[] = [
 
 const DashboardLayout = async ({ children }: LayoutProps) => {
    const session = await getServerSession(authOptions);
-
    if (!session) notFound();
+
+   const friends = await getFriendsById(session.user.id);
 
    const unseenRequestCount = (
       (await fetchRedis(
@@ -51,7 +56,16 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
             <nav className="flex flex-1 flex-col">
                <ul className="flex flex-1 flex-col gap-y-7" role="list">
                   {/* TODO chat that you have */}
-                  <li>Chat that this user have</li>
+                  <li>
+                     {friends.length ? (
+                        <SidebarChatList
+                           friends={friends}
+                           sessionId={session.user.id}
+                        />
+                     ) : (
+                        <p className="text-rose-600">No Friends</p>
+                     )}
+                  </li>
                   {/* TODO: List your navigation */}
                   <li>
                      <div className="text-xs font-semibold leading-6 text-gray-400">
@@ -78,15 +92,14 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
                               </li>
                            );
                         })}
+                        {/* TODO upcoming friend request */}
+                        <li>
+                           <FriendRequestSidebarOption
+                              sessionId={session.user.id}
+                              initialUnseenRequestCount={unseenRequestCount}
+                           />
+                        </li>
                      </ul>
-                  </li>
-
-                  {/* TODO upcoming friend request */}
-                  <li>
-                     <FriendRequestSidebarOption
-                        sessionId={session.user.id}
-                        initialUnseenRequestCount={unseenRequestCount}
-                     />
                   </li>
 
                   {/* TODO user information */}
