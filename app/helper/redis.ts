@@ -1,16 +1,17 @@
 const redis_api_url = process.env.UPSTASH_REDIS_REST_URL as string;
 const redis_token = process.env.UPSTASH_REDIS_REST_TOKEN as string;
 
-type Commands = "zrange" | "sismember" | "get" | "smember";
+type Commands = "zrange" | "sismember" | "get" | "smembers";
 
 export async function fetchRedis(
    command: Commands,
    ...args: (string | number)[]
 ) {
    const commandUrl = `${redis_api_url}/${command}/${args.join("/")}`;
+
    const response = await fetch(commandUrl, {
       headers: {
-         Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+         Authorization: `Bearer ${redis_token}`,
       },
       cache: "no-store",
    });

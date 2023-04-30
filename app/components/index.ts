@@ -3,6 +3,7 @@ import Providers from "./Providers";
 import AddFriendButton from "./AddFriendButton";
 import SignOutButton from "./SignOutButton";
 import FriendRequestSidebarOption from "./FriendRequestSidebarOption";
+import FriendRequests from "./FriendRequests";
 
 export {
    Button,
@@ -10,4 +11,5 @@ export {
    AddFriendButton,
    SignOutButton,
    FriendRequestSidebarOption,
+   FriendRequests,
 };

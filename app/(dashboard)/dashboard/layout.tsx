@@ -7,6 +7,8 @@ import { authOptions } from "@/app/lib/auth";
 import Link from "next/link";
 import { Icon, Icons } from "@/app/components/Icons";
 import { FriendRequestSidebarOption, SignOutButton } from "@/app/components";
+import { fetchRedis } from "@/app/helper/redis";
+import { log } from "console";
 
 interface LayoutProps {
    children: ReactNode;
@@ -27,6 +29,13 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
    const session = await getServerSession(authOptions);
 
    if (!session) notFound();
+
+   const unseenRequestCount = (
+      (await fetchRedis(
+         "smembers",
+         `user:${session.user.id}:incoming_friend_requests`
+      )) as User[]
+   ).length;
 
    return (
       <div className="w-full flex h-screen pl-3">
@@ -74,7 +83,10 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
 
                   {/* TODO upcoming friend request */}
                   <li>
-                     <FriendRequestSidebarOption />
+                     <FriendRequestSidebarOption
+                        sessionId={session.user.id}
+                        initialUnseenRequestCount={unseenRequestCount}
+                     />
                   </li>
 
                   {/* TODO user information */}
