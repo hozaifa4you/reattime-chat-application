@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import { format } from "date-fns";
+import Image from "next/image";
 
 import { Message } from "@/app/lib/validations/message";
 import { cn } from "../lib/utils";
@@ -7,9 +9,16 @@ import { cn } from "../lib/utils";
 interface PropTypes {
    initialMessages: Message[];
    sessionId: string;
+   sessionImg: string;
+   chatPartner: User;
 }
 
-const Messages = ({ initialMessages, sessionId }: PropTypes) => {
+const Messages = ({
+   initialMessages,
+   sessionId,
+   chatPartner,
+   sessionImg,
+}: PropTypes) => {
    const scrollDownRef = useRef<HTMLDivElement | null>(null);
    const [messages, setMessages] = useState<Message[]>(initialMessages);
 
@@ -24,6 +33,10 @@ const Messages = ({ initialMessages, sessionId }: PropTypes) => {
             const isCurrentUser = message.senderId === sessionId;
             const hasNextMessageFromSameUser =
                messages[index - 1]?.senderId === messages[index].senderId;
+
+            const formatTimestamp = (timestamp: number) => {
+               return format(timestamp, "HH:mm");
+            };
 
             return (
                <div
@@ -56,9 +69,29 @@ const Messages = ({ initialMessages, sessionId }: PropTypes) => {
                         >
                            {message.text}{" "}
                            <span className="ml-2 text-xs text-gray-400">
-                              {message.timestamp}
+                              {formatTimestamp(message.timestamp)}
                            </span>
                         </span>
+                     </div>
+
+                     <div
+                        className={cn("relative w-6 h-6", {
+                           "order-2": isCurrentUser,
+                           "order-1": !isCurrentUser,
+                           invisible: hasNextMessageFromSameUser,
+                        })}
+                     >
+                        <Image
+                           fill
+                           src={
+                              isCurrentUser
+                                 ? (sessionImg as string)
+                                 : chatPartner.image
+                           }
+                           alt="session images"
+                           referrerPolicy="no-referrer"
+                           className="rounded-md"
+                        />
                      </div>
                   </div>
                </div>
