@@ -7,6 +7,7 @@ import FriendRequests from "./FriendRequests";
 import SidebarChatList from "./SidebarChatList";
 import Messages from "./Messages";
 import ChatInput from "./ChatInput";
+import UnseenChatToast from "./UnseenChatToast";
 
 export {
    Button,
@@ -18,4 +19,5 @@ export {
    SidebarChatList,
    Messages,
    ChatInput,
+   UnseenChatToast,
 };

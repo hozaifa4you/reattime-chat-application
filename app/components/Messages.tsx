@@ -26,8 +26,6 @@ const Messages = ({
    const [messages, setMessages] = useState<Message[]>(initialMessages);
 
    const formatTimestamp = (timestamp: number) => {
-      console.log(timestamp);
-
       return format(timestamp, "HH:mm");
    };
 
@@ -39,8 +37,6 @@ const Messages = ({
        * @description interact with server
        */
       const messageHandler = (message: Message) => {
-         // console.log(message);
-
          setMessages((prev) => [message, ...prev]);
       };
 

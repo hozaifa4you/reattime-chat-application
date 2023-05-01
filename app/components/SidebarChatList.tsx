@@ -1,11 +1,20 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { toast } from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
-import { chatHrefConstrictor } from "../lib/utils";
+
+import { chatHrefConstrictor, toPusherKey } from "../lib/utils";
+import { pusherClient } from "../lib/pusher";
+import { UnseenChatToast } from "@/app/components";
 
 interface PropTypes {
    friends: User[];
    sessionId: string;
+}
+
+interface ExtendedMessage extends Message {
+   senderImg: string;
+   senderName: string;
 }
 
 const SidebarChatList = ({ friends, sessionId }: PropTypes) => {
@@ -20,6 +29,48 @@ const SidebarChatList = ({ friends, sessionId }: PropTypes) => {
          );
       }
    }, [pathname]);
+
+   // TODO interact with ws
+   useEffect(() => {
+      pusherClient.subscribe(toPusherKey(`user:${sessionId}:chats`));
+      pusherClient.subscribe(toPusherKey(`user:${sessionId}:friends`));
+
+      const chatHandler = (message: ExtendedMessage) => {
+         const shouldNotify =
+            pathname !==
+            `/dashboard/chat/${chatHrefConstrictor(
+               sessionId,
+               message.senderId
+            )}`;
+
+         if (!shouldNotify) return;
+         // toast
+         toast.custom((t) => (
+            <UnseenChatToast
+               t={t}
+               sessionId={sessionId}
+               senderId={message.senderId}
+               senderImg={message.senderImg}
+               senderMessage={message.text}
+               senderName={message.senderName}
+            />
+         ));
+
+         setUnseenMessages((prev) => [...prev, message]);
+      };
+
+      const newFriendHandler = () => {
+         router.refresh();
+      };
+
+      pusherClient.bind("new_message", chatHandler);
+      pusherClient.bind("new_friend", newFriendHandler);
+
+      return () => {
+         pusherClient.unsubscribe(toPusherKey(`user:${sessionId}:chats`));
+         pusherClient.unsubscribe(toPusherKey(`user:${sessionId}:friends`));
+      };
+   }, [sessionId, router, pathname]);
 
    return (
       <ul role="list" className="max-h-[25rem] overflow-y-auto -mx-2 space-y-1">

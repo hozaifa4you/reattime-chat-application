@@ -5,33 +5,10 @@ import { toast } from "react-hot-toast";
 
 import { authOptions } from "@/app/lib/auth";
 import { notFound } from "next/navigation";
-import { db } from "@/app/lib/db";
 import { fetchRedis } from "@/app/helper/redis";
 import { messageArrayValidator } from "@/app/lib/validations/message";
-import { z } from "zod";
 import Image from "next/image";
 import { ChatInput, Messages } from "@/app/components";
-
-// The following generateMetadata functiion was written after the video and is purely optional
-export async function generateMetadata({
-   params,
-}: {
-   params: { chatId: string };
-}) {
-   const session = await getServerSession(authOptions);
-   if (!session) notFound();
-   const [userId1, userId2] = params.chatId.split("--");
-   const { user } = session;
-
-   const chatPartnerId = user.id === userId1 ? userId2 : userId1;
-   const chatPartnerRaw = (await fetchRedis(
-      "get",
-      `user:${chatPartnerId}`
-   )) as string;
-   const chatPartner = JSON.parse(chatPartnerRaw) as User;
-
-   return { title: `FriendZone | ${chatPartner.name} chat` };
-}
 
 interface PageProps {
    params: {
