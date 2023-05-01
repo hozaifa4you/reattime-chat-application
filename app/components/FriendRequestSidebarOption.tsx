@@ -1,7 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { User } from "lucide-react";
+
+import { pusherClient } from "@/app/lib/pusher";
+import { toPusherKey } from "@/app/lib/utils";
 
 interface PropTypes {
    initialUnseenRequestCount: number;
@@ -15,6 +18,26 @@ const FriendRequestSidebarOption = ({
    const [unseenRequestCount, setUnseenRequestCount] = useState<number>(
       initialUnseenRequestCount
    );
+
+   useEffect(() => {
+      // TODO websocket
+      pusherClient.subscribe(
+         toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+      );
+
+      const friendRequestHandler = () => {
+         setUnseenRequestCount((pre) => pre + 1);
+      };
+
+      pusherClient.bind("incoming_friend_requests", friendRequestHandler);
+
+      return () => {
+         pusherClient.unsubscribe(
+            toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+         );
+         pusherClient.unbind("incoming_friend_requests", friendRequestHandler);
+      };
+   }, [sessionId]);
 
    return (
       <Link

@@ -1,8 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Check, UserPlus, X } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+
+import { pusherClient } from "@/app/lib/pusher";
+import { toPusherKey } from "../lib/utils";
 
 interface PropTypes {
    incomingFriendRequests: IncomingFriendRequests[];
@@ -34,6 +37,29 @@ const FriendRequests = ({ incomingFriendRequests, sessionId }: PropTypes) => {
 
       router.refresh();
    };
+
+   useEffect(() => {
+      // TODO websocket
+      pusherClient.subscribe(
+         toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+      );
+
+      const friendRequestHandler = ({
+         senderEmail,
+         senderId,
+      }: IncomingFriendRequests) => {
+         setFriendRequests((prev) => [...prev, { senderId, senderEmail }]);
+      };
+
+      pusherClient.bind("incoming_friend_requests", friendRequestHandler);
+
+      return () => {
+         pusherClient.unsubscribe(
+            toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+         );
+         pusherClient.unbind("incoming_friend_requests", friendRequestHandler);
+      };
+   }, [sessionId]);
 
    return (
       <>

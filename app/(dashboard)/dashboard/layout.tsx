@@ -35,6 +35,7 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
 
    const friends = await getFriendsById(session.user.id);
 
+   // FIXME There is some realtime change
    const unseenRequestCount = (
       (await fetchRedis(
          "smembers",
