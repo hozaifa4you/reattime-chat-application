@@ -12,15 +12,34 @@ import { z } from "zod";
 import Image from "next/image";
 import { ChatInput, Messages } from "@/app/components";
 
-interface PropTypes {
+// The following generateMetadata functiion was written after the video and is purely optional
+export async function generateMetadata({
+   params,
+}: {
    params: { chatId: string };
+}) {
+   const session = await getServerSession(authOptions);
+   if (!session) notFound();
+   const [userId1, userId2] = params.chatId.split("--");
+   const { user } = session;
+
+   const chatPartnerId = user.id === userId1 ? userId2 : userId1;
+   const chatPartnerRaw = (await fetchRedis(
+      "get",
+      `user:${chatPartnerId}`
+   )) as string;
+   const chatPartner = JSON.parse(chatPartnerRaw) as User;
+
+   return { title: `FriendZone | ${chatPartner.name} chat` };
 }
 
-/**
- * @description This function extract your previous messages with the boy/girl
- * @param chatId chat id to parse your previous messages with the partner
- */
-const getChatMessages = async (chatId: string) => {
+interface PageProps {
+   params: {
+      chatId: string;
+   };
+}
+
+async function getChatMessages(chatId: string) {
    try {
       const results: string[] = await fetchRedis(
          "zrange",
@@ -28,23 +47,28 @@ const getChatMessages = async (chatId: string) => {
          0,
          -1
       );
+
       const dbMessages = results.map(
          (message) => JSON.parse(message) as Message
       );
-      const reversedDBMessages = dbMessages.reverse();
-      const messages = messageArrayValidator.parse(reversedDBMessages);
+
+      const reversedDbMessages = dbMessages.reverse();
+
+      const messages = messageArrayValidator.parse(reversedDbMessages);
+
       return messages;
    } catch (error) {
       notFound();
    }
-};
+}
 
-const Chat = async ({ params }: PropTypes) => {
+const page = async ({ params }: PageProps) => {
+   const { chatId } = params;
    const session = await getServerSession(authOptions);
    if (!session) notFound();
 
-   const { chatId } = params;
    const { user } = session;
+
    const [userId1, userId2] = chatId.split("--");
 
    if (user.id !== userId1 && user.id !== userId2) {
@@ -52,7 +76,13 @@ const Chat = async ({ params }: PropTypes) => {
    }
 
    const chatPartnerId = user.id === userId1 ? userId2 : userId1;
-   const chatPartner = (await db.get(`user:${chatPartnerId}`)) as User;
+   // new
+
+   const chatPartnerRaw = (await fetchRedis(
+      "get",
+      `user:${chatPartnerId}`
+   )) as string;
+   const chatPartner = JSON.parse(chatPartnerRaw) as User;
    const initialMessages = await getChatMessages(chatId);
 
    return (
@@ -77,6 +107,7 @@ const Chat = async ({ params }: PropTypes) => {
                         {chatPartner.name}
                      </span>
                   </div>
+
                   <span className="text-sm text-gray-600">
                      {chatPartner.email}
                   </span>
@@ -85,14 +116,15 @@ const Chat = async ({ params }: PropTypes) => {
          </div>
 
          <Messages
-            initialMessages={initialMessages}
-            sessionId={session.user.id}
+            chatId={chatId}
             chatPartner={chatPartner}
             sessionImg={session.user.image || ""}
+            sessionId={session.user.id}
+            initialMessages={initialMessages}
          />
-         <ChatInput chatPartner={chatPartner} chatId={chatId} />
+         <ChatInput chatId={chatId} chatPartner={chatPartner} />
       </div>
    );
 };
 
-export default Chat;
+export default page;

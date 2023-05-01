@@ -4,13 +4,15 @@ import { format } from "date-fns";
 import Image from "next/image";
 
 import { Message } from "@/app/lib/validations/message";
-import { cn } from "../lib/utils";
+import { cn, toPusherKey } from "../lib/utils";
+import { pusherClient } from "../lib/pusher";
 
 interface PropTypes {
    initialMessages: Message[];
    sessionId: string;
    sessionImg: string;
    chatPartner: User;
+   chatId: string;
 }
 
 const Messages = ({
@@ -18,9 +20,37 @@ const Messages = ({
    sessionId,
    chatPartner,
    sessionImg,
+   chatId,
 }: PropTypes) => {
    const scrollDownRef = useRef<HTMLDivElement | null>(null);
    const [messages, setMessages] = useState<Message[]>(initialMessages);
+
+   const formatTimestamp = (timestamp: number) => {
+      console.log(timestamp);
+
+      return format(timestamp, "HH:mm");
+   };
+
+   useEffect(() => {
+      pusherClient.subscribe(toPusherKey(`chat:${chatId}`));
+
+      /**
+       * @param message Message interface
+       * @description interact with server
+       */
+      const messageHandler = (message: Message) => {
+         // console.log(message);
+
+         setMessages((prev) => [message, ...prev]);
+      };
+
+      pusherClient.bind("incoming-message", messageHandler);
+
+      return () => {
+         pusherClient.unsubscribe(toPusherKey(`chat:${chatId}`));
+         pusherClient.unbind("incoming-message", messageHandler);
+      };
+   }, [chatId]);
 
    return (
       <div
@@ -33,10 +63,6 @@ const Messages = ({
             const isCurrentUser = message.senderId === sessionId;
             const hasNextMessageFromSameUser =
                messages[index - 1]?.senderId === messages[index].senderId;
-
-            const formatTimestamp = (timestamp: number) => {
-               return format(timestamp, "HH:mm");
-            };
 
             return (
                <div
@@ -70,6 +96,7 @@ const Messages = ({
                            {message.text}{" "}
                            <span className="ml-2 text-xs text-gray-400">
                               {formatTimestamp(message.timestamp)}
+                              {/* {message.timestamp} */}
                            </span>
                         </span>
                      </div>
