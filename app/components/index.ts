@@ -8,6 +8,7 @@ import SidebarChatList from "./SidebarChatList";
 import Messages from "./Messages";
 import ChatInput from "./ChatInput";
 import UnseenChatToast from "./UnseenChatToast";
+import MobileChatLayout from "./MobileChatLayout";
 
 export {
    Button,
@@ -20,4 +21,5 @@ export {
    Messages,
    ChatInput,
    UnseenChatToast,
+   MobileChatLayout,
 };

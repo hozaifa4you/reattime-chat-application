@@ -8,6 +8,7 @@ import { authOptions } from "@/app/lib/auth";
 import { Icon, Icons } from "@/app/components/Icons";
 import {
    FriendRequestSidebarOption,
+   MobileChatLayout,
    SidebarChatList,
    SignOutButton,
 } from "@/app/components";
@@ -35,7 +36,6 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
 
    const friends = await getFriendsById(session.user.id);
 
-   // FIXME There is some realtime change
    const unseenRequestCount = (
       (await fetchRedis(
          "smembers",
@@ -45,6 +45,14 @@ const DashboardLayout = async ({ children }: LayoutProps) => {
 
    return (
       <div className="w-full flex h-screen pl-3">
+         <div className="md:hidden">
+            <MobileChatLayout
+               friends={friends}
+               session={session}
+               sidebarOptions={sidebarOptions}
+               unseenRequestCount={unseenRequestCount}
+            />
+         </div>
          <div className="hidden md:flex h-full w-full max-w-xs grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
             <Link href="/dashboard" className="flex h-16 shrink-0 items-center">
                <Icons.Logo className="h-8 w-auto text-indigo-600" />
