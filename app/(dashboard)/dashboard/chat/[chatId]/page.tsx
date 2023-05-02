@@ -1,7 +1,6 @@
 // "use client";
 import React from "react";
 import { getServerSession } from "next-auth";
-import { toast } from "react-hot-toast";
 
 import { authOptions } from "@/app/lib/auth";
 import { notFound } from "next/navigation";
