@@ -8,6 +8,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
    title: "Realtime Chat Application",
    description: "Chat with your friends",
+   icons: {
+      icon: { url: "@/app/favicon.ico", type: "image/ico" },
+      shortcut: { url: "@/app/favicon.ico", type: "image/ico" },
+   },
 };
 
 export default function RootLayout({
